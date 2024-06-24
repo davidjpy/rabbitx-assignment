@@ -10,32 +10,61 @@ interface Props {
 
 // isolated presentation layer for rending ui
 export function OrderBook({ asksOrderBlocks, bidsOrderBlocks, rows, symbol, currency }: Props) {
+    const asksOrderBlocksRenderList = asksOrderBlocks.slice(0, rows).reverse()
+    const bidsOrderBlocksRenderList = bidsOrderBlocks.slice(-rows).reverse()
+
     return (
-        <section className='w-fit bg-[#101624] font-medium'>
-            <header className='flex gap-[60px] justify-between text-[#596379]'>
-                <h1>
-                    Price <span>{currency}</span>
+        <section className='w-fit bg-[#101624] pb-4 pr-4 pt-4 font-medium'>
+            <header className='mb-2 flex justify-between text-[#596379]'>
+                <h1 className='w-[150px] pl-2 text-lg'>
+                    Price <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{currency}</span>
                 </h1>
-                <h1>
-                    Amount <span>{symbol}</span>
+                <h1 className='w-[150px] pr-4 text-end text-lg'>
+                    Amount <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{symbol}</span>
                 </h1>
-                <h1>
-                    Total <span>{symbol}</span>
+                <h1 className='w-[150px] pr-2 text-end text-lg'>
+                    Total <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{symbol}</span>
                 </h1>
             </header>
             <ul>
-                {asksOrderBlocks
-                    .slice(0, rows)
-                    .reverse()
-                    .map((orderBlock) => (
-                        <li key={orderBlock.price} className='flex justify-between'>
-                            <span className='text-[#CB3C50]'>{orderBlock.price}</span>
-                            <span className='text-[#727B8E]'>{orderBlock.amount}</span>
-                            <span className='text-[#727B8E]'>{orderBlock.total}</span>
-                        </li>
-                    ))}
+                {asksOrderBlocksRenderList.map((orderBlock) => (
+                    <li key={orderBlock.price} className='group flex'>
+                        <h5 className='w-[150px] rounded-md pl-2 text-[#CB3C50] group-last:bg-[#472233]'>
+                            {orderBlock.price}
+                        </h5>
+                        <h5 className='w-[150px] pr-4 text-end text-[#727B8E]'>{orderBlock.amount}</h5>
+                        <span className='relative w-[150px] pr-2 text-end text-[#727B8E]'>
+                            <h5 className='relative z-50'>{orderBlock.total}</h5>
+                            <span
+                                className='absolute left-0 top-0 z-0 h-full bg-[#472233] opacity-70'
+                                style={{
+                                    width: `${(Number(orderBlock.total) / Number(asksOrderBlocksRenderList[0].total)) * 100}%`
+                                }}
+                            ></span>
+                        </span>
+                    </li>
+                ))}
             </ul>
-            <ul></ul>
+            <div></div>
+            <ul>
+                {bidsOrderBlocksRenderList.map((orderBlock) => (
+                    <li key={orderBlock.price} className='group flex'>
+                        <h5 className='w-[150px] rounded-md pl-2 text-[#16BC8F] group-first:bg-[#113A42]'>
+                            {orderBlock.price}
+                        </h5>
+                        <h5 className='w-[150px] pr-2 text-end text-[#727B8E]'>{orderBlock.amount}</h5>
+                        <span className='relative w-[150px] pr-4 text-end text-[#727B8E]'>
+                            <h5 className='relative z-50'>{orderBlock.total}</h5>
+                            <span
+                                className='absolute left-0 top-0 z-0 h-full bg-[#113A42] opacity-70'
+                                style={{
+                                    width: `${(Number(orderBlock.total) / Number(bidsOrderBlocksRenderList[rows - 1].total)) * 100}%`
+                                }}
+                            ></span>
+                        </span>
+                    </li>
+                ))}
+            </ul>
         </section>
     )
 }
