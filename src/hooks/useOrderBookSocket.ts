@@ -3,7 +3,7 @@ import { Centrifuge } from 'centrifuge'
 
 import type { Order, OrderList, OrderBlock } from '@/utilities/types'
 
-type Operation = 'Add' | 'Update' | 'Delete'
+type Operation = 'Add' | 'Update' | 'Delete' | 'Error'
 
 interface OrderBookData {
     timestamp: number
@@ -13,12 +13,17 @@ interface OrderBookData {
     bids: OrderList<string>
 }
 
+interface SocketData {
+    asksOrderBlocks: OrderBlock[]
+    bidsOrderBlocks: OrderBlock[]
+}
+
 // compose the raw order into order block for rendering
 const composeOrderBlock = (order: Order<string | number>, accumulatedAmount: number): OrderBlock => {
     return {
         price: Number(order[0]),
         amount: Number(order[1]),
-        total: (Number(order[1]) + accumulatedAmount).toFixed(4)
+        total: Number((Number(order[1]) + accumulatedAmount).toFixed(3))
     }
 }
 
@@ -39,8 +44,8 @@ const getInsertIndexFromSortedArray = (array: number[], value: number) => {
 }
 
 // extract the business logic from the component to a hook
-export const useOrderBookSocket = (url: string, channel: string, token: string) => {
-    const currentSequenceNumberRef = useRef<number>(Infinity)
+export const useOrderBookSocket = (url: string, bookChannel: string, token: string): SocketData => {
+    const currentOrderbookSequenceNumberRef = useRef<number>(Infinity)
     const asksPriceSizeMapRef = useRef<Map<number, number>>(new Map())
     const asksPriceSequenceRef = useRef<number[]>([])
 
@@ -54,7 +59,19 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
     const getOperation = (priceSizeMap: Map<number, number>, price: number, size: number): Operation => {
         const isExistingPriceLevel = priceSizeMap.has(price)
 
-        return isExistingPriceLevel && size > 0 ? 'Update' : isExistingPriceLevel && size === 0 ? 'Delete' : 'Add'
+        if (isExistingPriceLevel) {
+            if (size > 0) {
+                return 'Update'
+            } else {
+                return 'Delete'
+            }
+        } else {
+            if (size > 0) {
+                return 'Add'
+            } else {
+                return 'Error'
+            }
+        }
     }
 
     // update existing price level
@@ -98,15 +115,16 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
     > = {
         Add: addNewPriceLevel,
         Update: updatePriceSizeMap,
-        Delete: deletePriceLevel
+        Delete: deletePriceLevel,
+        Error: () => {}
     }
 
     useEffect(() => {
         const centrifuge = new Centrifuge(url, { token: token })
-        const subscription = centrifuge.newSubscription(channel)
+        const orderBookSubscription = centrifuge.newSubscription(bookChannel)
 
-        // get & set the initial snapshot
-        subscription.on('subscribed', (ctx) => {
+        // get & set the initial order book snapshot
+        orderBookSubscription.on('subscribed', (ctx) => {
             const data: OrderBookData = ctx.data
 
             let asksAccumulatedAmount = 0
@@ -138,19 +156,19 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
             }
 
             // record current sequence number
-            currentSequenceNumberRef.current = Number(data.sequence)
+            currentOrderbookSequenceNumberRef.current = Number(data.sequence)
 
             // trigger rerendering
             setAsksOrderBlocks(asksOrderBlockTemp)
             setBidsOrderBlocks(bidsOrderBlockTemp)
         })
 
-        // subscribe to the socket
-        subscription.on('publication', (ctx) => {
+        // subscribe to the orderbook socket
+        orderBookSubscription.on('publication', (ctx) => {
             const data: OrderBookData = ctx.data
 
             // check for any package loss
-            const isPackageLoss = Number(data.sequence) !== currentSequenceNumberRef.current + 1
+            const isPackageLoss = Number(data.sequence) !== currentOrderbookSequenceNumberRef.current + 1
 
             // handle package loss
             if (isPackageLoss) {
@@ -186,6 +204,11 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
 
             // check for new bid orders
             if (data.bids.length) {
+                console.log('====== Bid ======')
+                console.log(data.bids)
+                console.log(bidsPriceSequenceRef.current)
+                console.log(bidsPriceSizeMapRef.current)
+                console.log('=========')
                 data.bids.forEach((bid) => {
                     // choose which operation to perform (update existing price, add new price, delete exsting price)
                     const operation = getOperation(bidsPriceSizeMapRef.current, Number(bid[0]), Number(bid[1]))
@@ -213,7 +236,7 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
             }
 
             // set current sequence number
-            currentSequenceNumberRef.current = Number(data.sequence)
+            currentOrderbookSequenceNumberRef.current = Number(data.sequence)
         })
 
         centrifuge.on('error', (ctx) => {
@@ -229,7 +252,7 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
         })
 
         centrifuge.connect()
-        subscription.subscribe()
+        orderBookSubscription.subscribe()
 
         // disconnect socket when component unmounts
         return () => {
@@ -237,5 +260,5 @@ export const useOrderBookSocket = (url: string, channel: string, token: string) 
         }
     }, [])
 
-    return [asksOrderBlocks, bidsOrderBlocks]
+    return { asksOrderBlocks, bidsOrderBlocks }
 }

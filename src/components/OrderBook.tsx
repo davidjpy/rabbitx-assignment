@@ -14,56 +14,96 @@ export function OrderBook({ asksOrderBlocks, bidsOrderBlocks, rows, symbol, curr
     const bidsOrderBlocksRenderList = bidsOrderBlocks.slice(-rows).reverse()
 
     return (
-        <section className='w-fit bg-[#101624] pb-4 pr-4 pt-4 font-medium'>
-            <header className='mb-2 flex justify-between text-[#596379]'>
+        <section className='w-fit bg-[#101624] p-4 font-medium'>
+            <header className='flex justify-between text-[#596379]'>
                 <h1 className='w-[150px] pl-2 text-lg'>
-                    Price <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{currency}</span>
+                    Price <span className='rounded-md bg-[#202A3F] p-[4px] text-sm'>{currency}</span>
                 </h1>
-                <h1 className='w-[150px] pr-4 text-end text-lg'>
-                    Amount <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{symbol}</span>
+                <h1 className='w-[150px] text-end text-lg'>
+                    Amount <span className='rounded-md bg-[#202A3F] p-[4px] text-sm'>{symbol}</span>
                 </h1>
-                <h1 className='w-[150px] pr-2 text-end text-lg'>
-                    Total <span className='rounded-md bg-[#202A3F] p-[2px] text-sm'>{symbol}</span>
+                <h1 className='ml-4 w-[150px] pr-2 text-end text-lg'>
+                    Total <span className='rounded-md bg-[#202A3F] p-[4px] text-sm'>{symbol}</span>
                 </h1>
             </header>
-            <ul>
-                {asksOrderBlocksRenderList.map((orderBlock) => (
-                    <li key={orderBlock.price} className='group flex'>
-                        <h5 className='w-[150px] rounded-md pl-2 text-[#CB3C50] group-last:bg-[#472233]'>
-                            {orderBlock.price}
-                        </h5>
-                        <h5 className='w-[150px] pr-4 text-end text-[#727B8E]'>{orderBlock.amount}</h5>
-                        <span className='relative w-[150px] pr-2 text-end text-[#727B8E]'>
-                            <h5 className='relative z-50'>{orderBlock.total}</h5>
-                            <span
-                                className='absolute left-0 top-0 z-0 h-full bg-[#472233] opacity-70'
-                                style={{
-                                    width: `${(Number(orderBlock.total) / Number(asksOrderBlocksRenderList[0].total)) * 100}%`
-                                }}
-                            ></span>
-                        </span>
-                    </li>
-                ))}
+
+            <ul className='h-[300px] pb-4 pt-4'>
+                {asksOrderBlocksRenderList.length ? (
+                    <>
+                        {asksOrderBlocksRenderList.map((orderBlock) => (
+                            <li key={orderBlock.price} className='group flex'>
+                                <h5 className='w-[150px] rounded-md pl-2 text-[#CB3C50] group-last:bg-[#472233]'>
+                                    {orderBlock.price.toLocaleString()}
+                                </h5>
+                                <h5 className='w-[150px] text-end text-[#727B8E]'>
+                                    {orderBlock.amount.toLocaleString()}
+                                </h5>
+                                <span className='relative ml-4 w-[150px] pr-2 text-end text-[#727B8E]'>
+                                    <h5 className='relative z-50'>{orderBlock.total.toLocaleString()}</h5>
+                                    <span
+                                        className='absolute left-0 top-0 z-0 h-full bg-[#472233] opacity-70'
+                                        style={{
+                                            width: `${(Number(orderBlock.total) / Number(asksOrderBlocksRenderList[0].total)) * 100}%`
+                                        }}
+                                    ></span>
+                                </span>
+                            </li>
+                        ))}
+                    </>
+                ) : (
+                    <h1 className='text-center text-2xl text-[#727B8E]'>No Data</h1>
+                )}
             </ul>
-            <div></div>
-            <ul>
-                {bidsOrderBlocksRenderList.map((orderBlock) => (
-                    <li key={orderBlock.price} className='group flex'>
-                        <h5 className='w-[150px] rounded-md pl-2 text-[#16BC8F] group-first:bg-[#113A42]'>
-                            {orderBlock.price}
-                        </h5>
-                        <h5 className='w-[150px] pr-2 text-end text-[#727B8E]'>{orderBlock.amount}</h5>
-                        <span className='relative w-[150px] pr-4 text-end text-[#727B8E]'>
-                            <h5 className='relative z-50'>{orderBlock.total}</h5>
-                            <span
-                                className='absolute left-0 top-0 z-0 h-full bg-[#113A42] opacity-70'
-                                style={{
-                                    width: `${(Number(orderBlock.total) / Number(bidsOrderBlocksRenderList[rows - 1].total)) * 100}%`
-                                }}
-                            ></span>
-                        </span>
-                    </li>
-                ))}
+
+            <div className='flex items-center rounded-md bg-[#1A2235] pl-4 pr-4 h-[50px] text-xl'>
+                <h1
+                    className='text-[#16BC8F]'
+                    style={{
+                        display: bidsOrderBlocksRenderList.length ? 'block' : 'none'
+                    }}
+                >
+                    {bidsOrderBlocksRenderList[0]?.price.toLocaleString()}
+                </h1>
+                <h1
+                    className='ml-24 text-white'
+                    style={{
+                        display: bidsOrderBlocksRenderList.length && asksOrderBlocksRenderList.length ? 'block' : 'none'
+                    }}
+                >
+                    {(
+                        (bidsOrderBlocksRenderList[0]?.price +
+                            asksOrderBlocksRenderList[asksOrderBlocksRenderList.length - 1]?.price) /
+                        2
+                    ).toLocaleString()}
+                </h1>
+            </div>
+
+            <ul className='h-[300px] pb-4 pt-4'>
+                {bidsOrderBlocksRenderList.length ? (
+                    <>
+                        {bidsOrderBlocksRenderList.map((orderBlock) => (
+                            <li key={orderBlock.price} className='group flex'>
+                                <h5 className='w-[150px] rounded-md pl-2 text-[#16BC8F] group-first:bg-[#113A42]'>
+                                    {orderBlock.price.toLocaleString()}
+                                </h5>
+                                <h5 className='w-[150px] text-end text-[#727B8E]'>
+                                    {orderBlock.amount.toLocaleString()}
+                                </h5>
+                                <span className='relative ml-4 w-[150px] pr-2 text-end text-[#727B8E]'>
+                                    <h5 className='relative z-50'>{orderBlock.total.toLocaleString()}</h5>
+                                    <span
+                                        className='absolute left-0 top-0 z-0 h-full bg-[#113A42] opacity-70'
+                                        style={{
+                                            width: `${(Number(orderBlock.total) / Number(bidsOrderBlocksRenderList[bidsOrderBlocksRenderList.length - 1].total)) * 100}%`
+                                        }}
+                                    ></span>
+                                </span>
+                            </li>
+                        ))}
+                    </>
+                ) : (
+                    <h1 className='text-center text-2xl text-[#727B8E]'>No Data</h1>
+                )}
             </ul>
         </section>
     )
