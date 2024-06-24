@@ -1,7 +1,7 @@
 import { OrderBook } from '@/components/OrderBook'
 import { useOrderBookSocket } from '@/hooks/useOrderBookSocket'
 
-// credentials, should be stored in env variables
+// credentials, should be stored in the env variables
 const socketUrl = 'wss://api.prod.rabbitx.io/ws'
 const socketSymbol = 'BTC-USD'
 const bookChannel = `orderbook:${socketSymbol}`
@@ -11,19 +11,26 @@ const token =
 const symbol = 'BTC'
 const rows = 11
 const currency = 'USD'
+
 // business layer to handle data
 function App() {
-    const { asksOrderBlocks, bidsOrderBlocks } = useOrderBookSocket(socketUrl, bookChannel, token)
+    const { asksOrderBlocks, bidsOrderBlocks, isLoading } = useOrderBookSocket(socketUrl, bookChannel, token)
 
-    // isolated presentation layer for rending ui
     return (
-        <OrderBook
-            asksOrderBlocks={asksOrderBlocks}
-            bidsOrderBlocks={bidsOrderBlocks}
-            rows={rows}
-            symbol={symbol}
-            currency={currency}
-        />
+        <div className='flex min-h-screen items-center justify-center'>
+            {isLoading ? (
+                <h1 className='text-2xl'>Connecting</h1>
+            ) : (
+                // isolated presentation layer for rending ui
+                <OrderBook
+                    asksOrderBlocks={asksOrderBlocks}
+                    bidsOrderBlocks={bidsOrderBlocks}
+                    rows={rows}
+                    symbol={symbol}
+                    currency={currency}
+                />
+            )}
+        </div>
     )
 }
 

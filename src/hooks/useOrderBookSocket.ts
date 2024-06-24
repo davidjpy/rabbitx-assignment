@@ -16,6 +16,7 @@ interface OrderBookData {
 interface SocketData {
     asksOrderBlocks: OrderBlock[]
     bidsOrderBlocks: OrderBlock[]
+    isLoading: boolean
 }
 
 // compose the raw order into order block for rendering
@@ -23,7 +24,7 @@ const composeOrderBlock = (order: Order<string | number>, accumulatedAmount: num
     return {
         price: Number(order[0]),
         amount: Number(order[1]),
-        total: (Number(order[1]) + accumulatedAmount)
+        total: Number(order[1]) + accumulatedAmount
     }
 }
 
@@ -52,6 +53,7 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
     const bidsPriceSizeMapRef = useRef<Map<number, number>>(new Map())
     const bidsPriceSequenceRef = useRef<number[]>([])
 
+    const [isLoading, setIsLoading] = useState<boolean>(false)
     const [asksOrderBlocks, setAsksOrderBlocks] = useState<OrderBlock[]>([])
     const [bidsOrderBlocks, setBidsOrderBlocks] = useState<OrderBlock[]>([])
 
@@ -123,6 +125,24 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
         const centrifuge = new Centrifuge(url, { token: token })
         const orderBookSubscription = centrifuge.newSubscription(bookChannel)
 
+        // handle incorrect sequence number error
+        orderBookSubscription.addListener('unsubscribed', () => {
+            // show loading screen
+            setIsLoading(true)
+
+            // reset all the states and reference
+            asksPriceSizeMapRef.current = new Map()
+            asksPriceSequenceRef.current = []
+            setAsksOrderBlocks([])
+
+            bidsPriceSizeMapRef.current = new Map()
+            bidsPriceSequenceRef.current = []
+            setBidsOrderBlocks([])
+
+            // resubscribe
+            orderBookSubscription.subscribe()
+        })
+
         // get & set the initial order book snapshot
         orderBookSubscription.on('subscribed', (ctx) => {
             const data: OrderBookData = ctx.data
@@ -168,12 +188,11 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
             const data: OrderBookData = ctx.data
 
             // check for any package loss
-            const isPackageLoss = Number(data.sequence) !== currentOrderbookSequenceNumberRef.current + 1
+            let isPackageLoss = Number(data.sequence) !== currentOrderbookSequenceNumberRef.current + 1
 
             // handle package loss
             if (isPackageLoss) {
-                console.error('package loss')
-                // logic.....
+                orderBookSubscription.unsubscribe()
                 return
             }
 
@@ -204,11 +223,6 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
 
             // check for new bid orders
             if (data.bids.length) {
-                console.log('====== Bid ======')
-                console.log(data.bids)
-                console.log(bidsPriceSequenceRef.current)
-                console.log(bidsPriceSizeMapRef.current)
-                console.log('=========')
                 data.bids.forEach((bid) => {
                     // choose which operation to perform (update existing price, add new price, delete exsting price)
                     const operation = getOperation(bidsPriceSizeMapRef.current, Number(bid[0]), Number(bid[1]))
@@ -239,16 +253,16 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
             currentOrderbookSequenceNumberRef.current = Number(data.sequence)
         })
 
-        centrifuge.on('error', (ctx) => {
-            console.log('error')
+        centrifuge.on('error', (_ctx) => {
+            orderBookSubscription.unsubscribe()
         })
 
-        centrifuge.on('connecting', (ctx) => {
-            console.log('connecting')
+        centrifuge.on('connecting', (_ctx) => {
+            setIsLoading(true)
         })
 
-        centrifuge.on('connected', (ctx) => {
-            console.log('connected')
+        centrifuge.on('connected', (_ctx) => {
+            setIsLoading(false)
         })
 
         centrifuge.connect()
@@ -256,9 +270,10 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
 
         // disconnect socket when component unmounts
         return () => {
+            orderBookSubscription.removeAllListeners()
             centrifuge.disconnect()
         }
     }, [])
 
-    return { asksOrderBlocks, bidsOrderBlocks }
+    return { asksOrderBlocks, bidsOrderBlocks, isLoading }
 }
