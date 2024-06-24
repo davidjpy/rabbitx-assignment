@@ -1,9 +1,9 @@
-export type Order = [string, string]
+export type Order<T> = [T, T]
 
-export type OrderList = Order[]
+export type OrderList<T> = Order<T>[]
 
 export interface OrderBlock {
     price: number
     amount: number
-    total: number
+    total: string
 }
