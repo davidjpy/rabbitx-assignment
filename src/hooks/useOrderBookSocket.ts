@@ -118,6 +118,7 @@ export const useOrderBookSocket = (url: string, bookChannel: string, token: stri
         Add: addNewPriceLevel,
         Update: updatePriceSizeMap,
         Delete: deletePriceLevel,
+        // error occurs when socket returns data that tries to delete non-exisitng price level
         Error: () => {}
     }
 

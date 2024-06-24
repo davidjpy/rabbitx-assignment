@@ -35,9 +35,13 @@ export function OrderBook({ asksOrderBlocks, bidsOrderBlocks, rows, symbol, curr
                         <h5 className='w-[150px] rounded-md pl-2 text-[#CB3C50] group-last:bg-[#472233]'>
                             {orderBlock.price.toLocaleString()}
                         </h5>
-                        <h5 className='w-[150px] text-end text-[#727B8E]'>{orderBlock.amount.toLocaleString()}</h5>
+                        <h5 className='w-[150px] text-end text-[#727B8E]'>
+                            {orderBlock.amount.toLocaleString(undefined, { minimumFractionDigits: 4 })}
+                        </h5>
                         <span className='relative ml-4 w-[150px] pr-2 text-end text-[#727B8E]'>
-                            <h5 className='relative z-50'>{orderBlock.total.toLocaleString()}</h5>
+                            <h5 className='relative z-50'>
+                                {orderBlock.total.toLocaleString(undefined, { minimumFractionDigits: 4 })}
+                            </h5>
                             <span
                                 className='absolute left-0 top-0 z-0 h-full bg-[#472233] opacity-70'
                                 style={{
@@ -78,9 +82,13 @@ export function OrderBook({ asksOrderBlocks, bidsOrderBlocks, rows, symbol, curr
                         <h5 className='w-[150px] rounded-md pl-2 text-[#16BC8F] group-first:bg-[#113A42]'>
                             {orderBlock.price.toLocaleString()}
                         </h5>
-                        <h5 className='w-[150px] text-end text-[#727B8E]'>{orderBlock.amount.toLocaleString()}</h5>
+                        <h5 className='w-[150px] text-end text-[#727B8E]'>
+                            {orderBlock.amount.toLocaleString(undefined, { minimumFractionDigits: 4 })}
+                        </h5>
                         <span className='relative ml-4 w-[150px] pr-2 text-end text-[#727B8E]'>
-                            <h5 className='relative z-50'>{orderBlock.total.toLocaleString()}</h5>
+                            <h5 className='relative z-50'>
+                                {orderBlock.total.toLocaleString(undefined, { minimumFractionDigits: 4 })}
+                            </h5>
                             <span
                                 className='absolute left-0 top-0 z-0 h-full bg-[#113A42] opacity-70'
                                 style={{
