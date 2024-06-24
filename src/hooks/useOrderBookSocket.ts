@@ -23,7 +23,7 @@ const composeOrderBlock = (order: Order<string | number>, accumulatedAmount: num
     return {
         price: Number(order[0]),
         amount: Number(order[1]),
-        total: Number((Number(order[1]) + accumulatedAmount).toFixed(3))
+        total: (Number(order[1]) + accumulatedAmount)
     }
 }
 
