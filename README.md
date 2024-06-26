@@ -3,22 +3,22 @@
   <h4 align="center">Vercel link: <a href="https://rabbitx-assignment.vercel.app/"><ins>https://rabbitx-assignment.vercel.app/</ins></a></h4>
 </div>
 
-## Environment:
+## Environment
 Node 18
 
-## Tech Stack:
+## Tech Stack
 1. Vite (Provide quick hot reload)
 2. TypeScript (Avoid runtime errors)
 3. TailwindCSS (Improve CSS workflow)
 4. Prettier (Enforce consistent coding style)
 
-## App Structure:
+## App Structure
 In order to create an isolated component that is reusable across the whole app, the component is divided into two layers, the business layer that handles the business logic and the presentation layer that handles the rendering logic. In the business layer, the implementation details of the socket and data manipulations are extracted to the ```useOrderBookSocket``` hook for the sake of the separation of concern.
 <div align="center">
   <img src="public/structure.webp" alt="application structure">
 </div>
 
-## Data Structure:
+## Data Structure
 Upon setting the order book data from the initial snapshot, the data is subjected to constant updates due to changes in price level and total size. There are three scenarios that should be considered when new data arrives.
 
 Case 1: Update existing price level 
@@ -35,14 +35,14 @@ const priceSizeMap = {
 const priceSequence = number[]
 ```
 
-### Case 1: Update existing price level:
+### Case 1: Update existing price level
 1. Check for existing price level in ```priceSizeMap``` O(1)
 2. Update existing price level in ```priceSizeMap``` O(1)
 3. Calculate new accumulated total size O(n)
 
 ```Time complexity = O(n)```
 
-### Case 2: Add new price level:
+### Case 2: Add new price level
 1. Check for existing price level in ```priceSizeMap``` O(1)
 2. Add new price level in ```priceSizeMap``` O(1)
 3. Binary search the insertion index in ```priceSequence``` O(log(n))
@@ -51,7 +51,7 @@ const priceSequence = number[]
    
 ```Time complexity = O(n)```
 
-### Case 3: Delete existing price level:
+### Case 3: Delete existing price level
 1. Check for existing price level in ```priceSizeMap``` O(1)
 2. Delete the price level from ```priceSizeMap``` O(1)
 3. Binary search the removal index in ```priceSequence``` O(log(n))
