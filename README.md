@@ -1,3 +1,8 @@
+# RabbitX Assignment
+<div align="center">
+  <h4 align="center">Vercel link: <a href="https://rabbitx-assignment.vercel.app/"><ins>https://rabbitx-assignment.vercel.app/</ins></a></h4>
+</div>
+
 ## Environment:
 Node 18
 
